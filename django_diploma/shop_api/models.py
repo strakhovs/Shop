@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import django.utils.timezone
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -47,3 +48,21 @@ class Review(models.Model):
     text = models.TextField(max_length=250, verbose_name='text')
     rate = models.IntegerField(verbose_name='rate')
     date = models.DateTimeField(default=django.utils.timezone.now, verbose_name='date')
+
+
+def profile_avatar_directory_path(instance: "Profile", filename: str) -> str:
+    return "users/{pk}/avatar/{filename}".format(
+        pk=instance.pk,
+        filename=filename,
+    )
+
+
+class Profile(models.Model):
+    class Meta:
+        verbose_name_plural = 'profiles'
+        verbose_name = 'profile'
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='user')
+    phone = models.CharField(max_length=15, blank=True, verbose_name='phone')
+    avatar = models.ImageField(null=True, blank=True, upload_to=profile_avatar_directory_path,
+                               verbose_name='avatar')
