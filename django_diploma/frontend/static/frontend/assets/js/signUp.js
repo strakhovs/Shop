@@ -8,6 +8,9 @@ var mix = {
 				.then(({ data, status }) => {
 					location.assign(`/`)
 				})
+				.catch(() => {
+				        alert('Пользователь с таким именем уже существует!')
+				})
 		}
 	},
 	mounted() {
