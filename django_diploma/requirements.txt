@@ -1,5 +1,4 @@
 asgiref==3.6.0
-diploma-frontend @ file:///home/sergey/PycharmProjects/python_django_diploma/diploma-frontend/dist/diploma-frontend-0.6.tar.gz
 Django==4.2.1
 djangorestframework==3.14.0
 Pillow==9.5.0
