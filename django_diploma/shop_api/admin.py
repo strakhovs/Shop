@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from .models import Product, Tag, Specification, Category, Profile
+from .models import Product, Tag, Specification, Category, Profile, Avatar
 
 
 @admin.register(Product)
@@ -26,4 +26,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = "avatar", "phone", "user_id"
+    list_display = "phone", "user_id"
+
+@admin.register(Avatar)
+class AvatarAdmin(admin.ModelAdmin):
+    list_display = "avatar", "src"
