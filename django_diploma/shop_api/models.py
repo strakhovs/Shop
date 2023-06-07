@@ -24,7 +24,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='category')
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='price', default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='price')
     count = models.IntegerField(verbose_name='count', default=0)
     date = models.DateTimeField(verbose_name='date', default=django.utils.timezone.now)
     title = models.CharField(max_length=50, verbose_name='title', default='')
@@ -57,12 +57,26 @@ def profile_avatar_directory_path(instance: "Profile", filename: str) -> str:
     )
 
 
+
+
 class Profile(models.Model):
     class Meta:
         verbose_name_plural = 'profiles'
         verbose_name = 'profile'
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='user')
+    fullName = models.CharField(max_length=100, null=False, blank=True)
+    email = models.EmailField(null=False, blank=True)
     phone = models.CharField(max_length=15, blank=True, verbose_name='phone')
-    avatar = models.ImageField(null=True, blank=True, upload_to=profile_avatar_directory_path,
-                               verbose_name='avatar')
+    # avatar = models.OneToOneField(Avatar, models.CASCADE, null=True, blank=True)
+    #  avatar = models.ImageField(null=True, blank=True, upload_to=profile_avatar_directory_path,
+    #                          verbose_name='avatar')
+
+
+class Avatar(models.Model):
+    class Meta:
+        verbose_name = 'avatar'
+    profile = models.OneToOneField(Profile, null=True, on_delete=models.CASCADE, verbose_name='user')
+    avatar = models.ImageField(null=True, upload_to=profile_avatar_directory_path, verbose_name='avatar')
+    src = models.CharField(max_length=100)
+    alt = models.CharField(max_length=200)
