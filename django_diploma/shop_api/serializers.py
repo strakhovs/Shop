@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Avatar, Profile, Category
+from .models import Avatar, Profile, Category, Tag
 
 
 class AuthSerializer(serializers.Serializer):
@@ -70,3 +70,9 @@ class CategoriesSerializer(serializers.ModelSerializer):
         print(obj.image.url)
         return {'src': obj.image.url,
                 'alt': 'Category image'}
+
+
+class TagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']

@@ -9,8 +9,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
-from .models import Profile, Avatar, profile_avatar_directory_path, Category
-from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer
+from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag
+from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
+    TagsSerializer
 
 
 class SignIn(APIView):
@@ -111,3 +112,14 @@ class CategoriesView(ListAPIView):
     queryset = Category.objects.filter(parent=None).prefetch_related('subcategories')
     serializer_class = CategoriesSerializer
     paginator = None
+
+
+class TagsView(APIView):
+    def get(self, request: Request) -> Response:
+        category = request.query_params.get('category')
+        if category == 'NaN':
+            return Response([])
+        item = Tag.objects.get(id=category)
+        serializer = TagsSerializer(item)
+        # data = JSONRenderer().render(serializer.data)
+        return Response([serializer.data])
