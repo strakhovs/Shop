@@ -1,4 +1,6 @@
 import io
+
+from rest_framework.generics import ListAPIView
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -7,8 +9,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
-from .models import Profile, Avatar, profile_avatar_directory_path
-from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer
+from .models import Profile, Avatar, profile_avatar_directory_path, Category
+from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer
 
 
 class SignIn(APIView):
@@ -103,3 +105,9 @@ class PasswordUpdateView(APIView):
         user = request.user
         print(request.data)
         return Response(status=200)
+
+
+class CategoriesView(ListAPIView):
+    queryset = Category.objects.filter(parent=None).prefetch_related('subcategories')
+    serializer_class = CategoriesSerializer
+    paginator = None

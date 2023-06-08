@@ -15,12 +15,22 @@ class Specification(models.Model):
 
 
 class Category(models.Model):
+
     class Meta:
         verbose_name = 'category'
         verbose_name_plural = 'categories'
-    title = models.CharField(max_length=250, verbose_name='title')
-    image = models.ImageField(verbose_name='image')
 
+    title = models.CharField(max_length=50, verbose_name='category')
+    image = models.ImageField(null=True, upload_to="categories/", verbose_name='image')
+    parent = models.ForeignKey('self',
+                               on_delete=models.CASCADE,
+                               null=True,
+                               blank=True,
+                               db_index=True,
+                               related_name='subcategories')
+
+    def __str__(self):
+        return self.title
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='category')
@@ -36,7 +46,7 @@ class Product(models.Model):
 
 class Image(models.Model):
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='product id')
-    image = models.ImageField(verbose_name='image')
+    image = models.ImageField(upload_to="products", verbose_name='image')
     src = models.CharField(max_length=250, verbose_name='src')
     alt = models.CharField(max_length=50, verbose_name='alt')
 
@@ -55,8 +65,6 @@ def profile_avatar_directory_path(instance: "Profile", filename: str) -> str:
         pk=instance.pk,
         filename=filename,
     )
-
-
 
 
 class Profile(models.Model):
