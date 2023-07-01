@@ -8,10 +8,16 @@ from django.db import models
 class Tag(models.Model):
     name = models.CharField(max_length=20, verbose_name='name')
 
+    def __str__(self):
+        return self.name
+
 
 class Specification(models.Model):
     name = models.CharField(max_length=100, verbose_name='name')
     value = models.CharField(max_length=100, verbose_name='value')
+
+    def __str__(self):
+        return ' '.join(self.name, self.value)
 
 
 class Category(models.Model):
@@ -42,6 +48,9 @@ class Product(models.Model):
     freeDelivery = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='tags')
     specifications = models.ManyToManyField(Specification, related_name='specifications')
+
+    def __str__(self):
+        return self.title
 
 
 class Image(models.Model):
