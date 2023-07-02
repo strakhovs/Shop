@@ -9,9 +9,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
-from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag
+from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer
+    TagsSerializer, ProductSerializer
 
 
 class SignIn(APIView):
@@ -123,3 +123,9 @@ class TagsView(APIView):
         serializer = TagsSerializer(item)
         # data = JSONRenderer().render(serializer.data)
         return Response([serializer.data])
+
+
+class LimitedProductsView(ListAPIView):
+    queryset = Product.objects.filter(is_limited=True).prefetch_related('tags')[:16]
+    serializer_class = ProductSerializer
+    paginator = None
