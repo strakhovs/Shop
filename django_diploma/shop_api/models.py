@@ -62,7 +62,6 @@ def product_image_directory_path(instance, filename):
 class Image(models.Model):
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='product id')
     image = models.ImageField(upload_to=product_image_directory_path, verbose_name='image')
-    src = models.CharField(max_length=250, verbose_name='src')
     alt = models.CharField(max_length=50, verbose_name='alt')
 
 
