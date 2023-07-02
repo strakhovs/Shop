@@ -17,7 +17,7 @@ class Specification(models.Model):
     value = models.CharField(max_length=100, verbose_name='value')
 
     def __str__(self):
-        return ' '.join(self.name, self.value)
+        return self.name
 
 
 class Category(models.Model):
@@ -38,6 +38,7 @@ class Category(models.Model):
     def __str__(self):
         return self.title
 
+
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='category')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='price')
@@ -48,14 +49,19 @@ class Product(models.Model):
     freeDelivery = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='tags')
     specifications = models.ManyToManyField(Specification, related_name='specifications')
+    is_limited = models.BooleanField(verbose_name='is limited', default=False)
 
     def __str__(self):
         return self.title
 
 
+def product_image_directory_path(instance, filename):
+    return "products/{pk}/{filename}".format(pk=instance.pk, filename=filename)
+
+
 class Image(models.Model):
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='product id')
-    image = models.ImageField(upload_to="products", verbose_name='image')
+    image = models.ImageField(upload_to=product_image_directory_path, verbose_name='image')
     src = models.CharField(max_length=250, verbose_name='src')
     alt = models.CharField(max_length=50, verbose_name='alt')
 
@@ -71,7 +77,7 @@ class Review(models.Model):
 
 def profile_avatar_directory_path(instance: "Profile", filename: str) -> str:
     return "users/{pk}/avatar/{filename}".format(
-        pk=instance.pk,
+        pk=instance.id,
         filename=filename,
     )
 
