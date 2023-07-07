@@ -51,7 +51,7 @@ class SignUp(APIView):
                 username=username,
                 password=password,
             )
-            profile = Profile.objects.create(user=user)
+            profile = Profile.objects.create(user=user, fullName=name)
             Avatar.objects.create(profile_id=profile.pk)
         login(request=self.request, user=user)
         return Response(status=200)
