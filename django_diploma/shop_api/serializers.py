@@ -119,3 +119,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         return obj.review_set.all().aggregate(Avg("rate"))
+
+
+class CatalogRequestSerializer(serializers.Serializer):
+    name = serializers.CharField
+    minPrice = serializers.DecimalField
+    maxPrice = serializers.DecimalField
+    freeDelivery = serializers.BooleanField
+    available = serializers.BooleanField
+
+# {
+#   "name": "string",
+#   "minPrice": 0,
+#   "maxPrice": 0,
+#   "freeDelivery": false,
+#   "available": true
+# }

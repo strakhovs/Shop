@@ -10,8 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
 from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product
+from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer
 
 
 class SignIn(APIView):
@@ -141,3 +142,31 @@ class BannersView(ListAPIView):
     queryset = Product.objects.filter(on_banner=True).prefetch_related('tags')[:6]
     serializer_class = ProductSerializer
     paginator = None
+
+
+class CatalogView(ListAPIView):
+
+    serializer_class = ProductSerializer
+    pagination_class = CustomPaginator
+
+    def get_queryset(self):
+        name = self.request.GET.get('filter[name]')
+        min_price = self.request.GET.get('filter[minPrice]')
+        max_price = self.request.GET.get('filter[maxPrice]')
+        free_delivery = True if self.request.GET.get('filter[freeDelivery]') == 'true' else False
+        available = 1 if self.request.GET.get('filter[available]') == 'true' else 0
+        current_page = self.request.GET.get('currentPage')
+        sort = self.request.GET.get('sort')
+        sort_type = self.request.GET.get('sortType')
+        limit = self.request.GET.get('limit')
+        print(name, min_price, max_price, free_delivery, available, current_page, sort, sort_type, limit)
+        queryset = Product.objects.filter(title__icontains=name,
+                                          price__range=(min_price, max_price),
+                                          freeDelivery=free_delivery,
+                                          count__gte=available
+                                          )
+        if sort:
+            if sort_type == 'dec':
+                sort = '-'+sort
+            queryset = queryset.order_by(sort)
+        return queryset
