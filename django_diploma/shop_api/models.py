@@ -50,6 +50,7 @@ class Product(models.Model):
     tags = models.ManyToManyField(Tag, related_name='tags')
     specifications = models.ManyToManyField(Specification, related_name='specifications')
     is_limited = models.BooleanField(verbose_name='is limited', default=False)
+    number_of_purchases = models.IntegerField(verbose_name='number of purchases', default=0)
 
     def __str__(self):
         return self.title
