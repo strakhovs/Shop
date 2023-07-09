@@ -136,7 +136,8 @@ class PopularProductsView(ListAPIView):
     serializer_class = ProductSerializer
     paginator = None
 
+
 class BannersView(ListAPIView):
-    queryset = Product.objects.order_by('number_of_purchases', 'title').prefetch_related('tags')[:1]
+    queryset = Product.objects.filter(on_banner=True).prefetch_related('tags')[:6]
     serializer_class = ProductSerializer
     paginator = None
