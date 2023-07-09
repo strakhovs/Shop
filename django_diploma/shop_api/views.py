@@ -129,3 +129,14 @@ class LimitedProductsView(ListAPIView):
     queryset = Product.objects.filter(is_limited=True).prefetch_related('tags')[:16]
     serializer_class = ProductSerializer
     paginator = None
+
+
+class PopularProductsView(ListAPIView):
+    queryset = Product.objects.order_by('number_of_purchases', 'title').prefetch_related('tags')[:16]
+    serializer_class = ProductSerializer
+    paginator = None
+
+class BannersView(ListAPIView):
+    queryset = Product.objects.order_by('number_of_purchases', 'title').prefetch_related('tags')[:1]
+    serializer_class = ProductSerializer
+    paginator = None

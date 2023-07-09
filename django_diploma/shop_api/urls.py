@@ -3,7 +3,7 @@ from django.contrib.auth.views import LogoutView
 from django.urls import path
 
 from .views import SignIn, SignUp, ProfileView, AvatarUpdateView, PasswordUpdateView, CategoriesView, TagsView, \
-    LimitedProductsView
+    LimitedProductsView, PopularProductsView, BannersView
 
 app_name = "shop_api"
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path('profile/password/', PasswordUpdateView.as_view(), name='password_update'),
     path('categories/', CategoriesView.as_view()),
     path('tags/', TagsView.as_view()),
-    path('products/limited/', LimitedProductsView.as_view())
-
+    path('products/limited/', LimitedProductsView.as_view()),
+    path('products/popular/', PopularProductsView.as_view()),
+    path('banners/', BannersView.as_view()),
 ]
