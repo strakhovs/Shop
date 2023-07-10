@@ -1,6 +1,8 @@
+import datetime
 import io
 
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+import django.utils.timezone
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -9,10 +11,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
-from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product
+from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review
 from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer
 
 
 class SignIn(APIView):
@@ -183,3 +185,19 @@ class ProductView(APIView):
         product = Product.objects.get(pk=product_id)
         serializer = FullProductSerializer(product)
         return Response(serializer.data)
+
+
+class ReviewAddView(APIView):
+    def post(self, request, product_id):
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid()
+        review = Review(
+            product_id=Product.objects.get(id=product_id),
+            author=serializer.validated_data.get('author'),
+            email=serializer.validated_data.get('email'),
+            text=serializer.validated_data.get('text'),
+            rate=serializer.validated_data.get('rate'),
+            date=django.utils.timezone.now()
+            )
+        review.save()
+        return Response(serializer.data, status=200)
