@@ -1,4 +1,8 @@
+import datetime
 import io
+
+import django.utils.timezone
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -7,8 +11,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
-from .models import Profile, Avatar, profile_avatar_directory_path
-from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer
+from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review
+from .paginators import CustomPaginator
+from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer
 
 
 class SignIn(APIView):
@@ -48,7 +54,7 @@ class SignUp(APIView):
                 username=username,
                 password=password,
             )
-            profile = Profile.objects.create(user=user)
+            profile = Profile.objects.create(user=user, fullName=name)
             Avatar.objects.create(profile_id=profile.pk)
         login(request=self.request, user=user)
         return Response(status=200)
@@ -103,3 +109,95 @@ class PasswordUpdateView(APIView):
         user = request.user
         print(request.data)
         return Response(status=200)
+
+
+class CategoriesView(ListAPIView):
+    queryset = Category.objects.filter(parent=None).prefetch_related('subcategories')
+    serializer_class = CategoriesSerializer
+    paginator = None
+
+
+class TagsView(APIView):
+    def get(self, request: Request) -> Response:
+        category = request.query_params.get('category')
+        if category == 'NaN':
+            return Response([])
+        item = Tag.objects.get(id=category)
+        serializer = TagsSerializer(item)
+        # data = JSONRenderer().render(serializer.data)
+        return Response([serializer.data])
+
+
+class LimitedProductsView(ListAPIView):
+    queryset = Product.objects.filter(is_limited=True).prefetch_related('tags')[:16]
+    serializer_class = ProductSerializer
+    paginator = None
+
+
+class PopularProductsView(ListAPIView):
+    queryset = Product.objects.order_by('number_of_purchases', 'title').prefetch_related('tags')[:16]
+    serializer_class = ProductSerializer
+    paginator = None
+
+
+class BannersView(ListAPIView):
+    queryset = Product.objects.filter(on_banner=True).prefetch_related('tags')[:6]
+    serializer_class = ProductSerializer
+    paginator = None
+
+
+class CatalogView(ListAPIView):
+
+    serializer_class = ProductSerializer
+    pagination_class = CustomPaginator
+
+    def get_queryset(self):
+        name = self.request.GET.get('filter[name]')
+        min_price = self.request.GET.get('filter[minPrice]')
+        max_price = self.request.GET.get('filter[maxPrice]')
+        free_delivery = True if self.request.GET.get('filter[freeDelivery]') == 'true' else False
+        available = 1 if self.request.GET.get('filter[available]') == 'true' else 0
+        current_page = self.request.GET.get('currentPage')
+        sort = self.request.GET.get('sort')
+        sort_type = self.request.GET.get('sortType')
+        limit = self.request.GET.get('limit')
+        print(name, min_price, max_price, free_delivery, available, current_page, sort, sort_type, limit)
+        queryset = Product.objects.filter(title__icontains=name,
+                                          price__range=(min_price, max_price),
+                                          freeDelivery=free_delivery,
+                                          count__gte=available
+                                          )
+        if sort:
+            if sort_type == 'dec':
+                sort = '-'+sort
+            queryset = queryset.order_by(sort)
+        print(queryset)
+        return queryset
+
+
+class CategoryCatalogView(CatalogView):
+    def get(self, request, category, *args, **kwargs):
+        print('!!!!', category)
+
+
+class ProductView(APIView):
+    def get(self, request: Request, product_id) -> Response:
+        product = Product.objects.get(pk=product_id)
+        serializer = FullProductSerializer(product)
+        return Response(serializer.data)
+
+
+class ReviewAddView(APIView):
+    def post(self, request, product_id):
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid()
+        review = Review(
+            product_id=Product.objects.get(id=product_id),
+            author=serializer.validated_data.get('author'),
+            email=serializer.validated_data.get('email'),
+            text=serializer.validated_data.get('text'),
+            rate=serializer.validated_data.get('rate'),
+            date=django.utils.timezone.now()
+            )
+        review.save()
+        return Response(serializer.data, status=200)

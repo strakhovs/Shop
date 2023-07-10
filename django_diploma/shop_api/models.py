@@ -8,18 +8,35 @@ from django.db import models
 class Tag(models.Model):
     name = models.CharField(max_length=20, verbose_name='name')
 
+    def __str__(self):
+        return self.name
+
 
 class Specification(models.Model):
     name = models.CharField(max_length=100, verbose_name='name')
     value = models.CharField(max_length=100, verbose_name='value')
 
+#    def __str__(self):
+#        return self.name
+
 
 class Category(models.Model):
+
     class Meta:
         verbose_name = 'category'
         verbose_name_plural = 'categories'
-    title = models.CharField(max_length=250, verbose_name='title')
-    image = models.ImageField(verbose_name='image')
+
+    title = models.CharField(max_length=50, verbose_name='category')
+    image = models.ImageField(null=True, upload_to="categories/", verbose_name='image')
+    parent = models.ForeignKey('self',
+                               on_delete=models.CASCADE,
+                               null=True,
+                               blank=True,
+                               db_index=True,
+                               related_name='subcategories')
+
+    def __str__(self):
+        return self.title
 
 
 class Product(models.Model):
@@ -32,12 +49,21 @@ class Product(models.Model):
     freeDelivery = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='tags')
     specifications = models.ManyToManyField(Specification, related_name='specifications')
+    is_limited = models.BooleanField(verbose_name='is limited', default=False)
+    number_of_purchases = models.IntegerField(verbose_name='number of purchases', default=0)
+    on_banner = models.BooleanField(verbose_name='on banner', default=False)
+
+    def __str__(self):
+        return self.title
+
+
+def product_image_directory_path(instance, filename):
+    return "products/{pk}/{filename}".format(pk=instance.product_id.pk, filename=filename)
 
 
 class Image(models.Model):
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='product id')
-    image = models.ImageField(verbose_name='image')
-    src = models.CharField(max_length=250, verbose_name='src')
+    image = models.ImageField(upload_to=product_image_directory_path, verbose_name='image')
     alt = models.CharField(max_length=50, verbose_name='alt')
 
 
@@ -52,11 +78,9 @@ class Review(models.Model):
 
 def profile_avatar_directory_path(instance: "Profile", filename: str) -> str:
     return "users/{pk}/avatar/{filename}".format(
-        pk=instance.pk,
+        pk=instance.id,
         filename=filename,
     )
-
-
 
 
 class Profile(models.Model):
