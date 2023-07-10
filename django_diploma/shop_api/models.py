@@ -46,6 +46,7 @@ class Product(models.Model):
     date = models.DateTimeField(verbose_name='date', default=django.utils.timezone.now)
     title = models.CharField(max_length=50, verbose_name='title', default='')
     description = models.TextField(max_length=250, verbose_name='description')
+    fullDescription = models.TextField(max_length=500, default='', verbose_name='full description')
     freeDelivery = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='tags')
     specifications = models.ManyToManyField(Specification, related_name='specifications')

@@ -147,13 +147,11 @@ class SpecsSerializer(serializers.ModelSerializer):
 
 
 class FullProductSerializer(serializers.ModelSerializer):
-    fullDescription = serializers.SerializerMethodField(method_name='get_full_description')
     images = serializers.SerializerMethodField(method_name='get_images')
     tags = serializers.SerializerMethodField(method_name='get_tags')
     reviews = serializers.SerializerMethodField(method_name='get_reviews')
     specifications = serializers.SerializerMethodField(method_name='get_specs')
     rating = serializers.SerializerMethodField(method_name='get_rating')
-
 
     class Meta:
         model = Product
@@ -171,9 +169,6 @@ class FullProductSerializer(serializers.ModelSerializer):
                   'reviews',
                   'specifications',
                   'rating']
-
-    def get_full_description(self, obj):
-        return obj.description
 
     def get_images(self, obj):
         images = obj.image_set.all()
