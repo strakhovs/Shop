@@ -16,8 +16,8 @@ class Specification(models.Model):
     name = models.CharField(max_length=100, verbose_name='name')
     value = models.CharField(max_length=100, verbose_name='value')
 
-#    def __str__(self):
-#        return self.name
+    def __str__(self):
+        return f'{self.name}: {self.value}'
 
 
 class Category(models.Model):
