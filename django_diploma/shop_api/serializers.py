@@ -2,7 +2,7 @@ from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 
-from .models import Avatar, Profile, Category, Tag, Product
+from .models import Avatar, Profile, Category, Tag, Product, Review, Specification
 
 
 class AuthSerializer(serializers.Serializer):
@@ -128,10 +128,89 @@ class CatalogRequestSerializer(serializers.Serializer):
     freeDelivery = serializers.BooleanField
     available = serializers.BooleanField
 
-# {
-#   "name": "string",
-#   "minPrice": 0,
-#   "maxPrice": 0,
-#   "freeDelivery": false,
-#   "available": true
-# }
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['author',
+                  'email',
+                  'text',
+                  'rate',
+                  'date']
+
+
+class SpecsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specification
+        fields = ['name',
+                  'value']
+
+
+class FullProductSerializer(serializers.ModelSerializer):
+    fullDescription = serializers.SerializerMethodField(method_name='get_full_description')
+    images = serializers.SerializerMethodField(method_name='get_images')
+    tags = serializers.SerializerMethodField(method_name='get_tags')
+    reviews = serializers.SerializerMethodField(method_name='get_reviews')
+    specifications = serializers.SerializerMethodField(method_name='get_specs')
+    rating = serializers.SerializerMethodField(method_name='get_rating')
+
+
+    class Meta:
+        model = Product
+        fields = ['id',
+                  'category',
+                  'price',
+                  'count',
+                  'date',
+                  'title',
+                  'description',
+                  'fullDescription',
+                  'freeDelivery',
+                  'images',
+                  'tags',
+                  'reviews',
+                  'specifications',
+                  'rating']
+
+    def get_full_description(self, obj):
+        return obj.description
+
+    def get_images(self, obj):
+        images = obj.image_set.all()
+        result = []
+        for image in images:
+            result.append({'src': image.image.url,
+                           'alt': image.alt})
+        return result
+
+        #images = obj.image_set.all()
+        #result = []
+        #for image in images:
+        #    result.append(image.image.url)
+        #return result
+
+    def get_tags(self, obj):
+        item = obj.tags.all()
+        serializer = TagsSerializer(item, many=True)
+        return serializer.data
+        #tags = obj.tags.all()
+        #result = []
+        #for tag in tags:
+        #    result.append(tag.name)
+        #return result
+
+    def get_reviews(self, obj):
+        reviews = obj.review_set.all()
+        serializer = ReviewSerializer(reviews, many=True)
+        return serializer.data
+
+    def get_specs(self, obj):
+        specs = obj.specifications.all()
+        print(specs)
+        serializer = SpecsSerializer(specs, many=True)
+        return serializer.data
+
+    def get_rating(self, obj):
+        return obj.review_set.all().aggregate(Avg("rate"))
+
+

@@ -1,6 +1,6 @@
 import io
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -12,7 +12,7 @@ from django.contrib.auth.hashers import make_password
 from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product
 from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer, CatalogRequestSerializer
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer
 
 
 class SignIn(APIView):
@@ -169,4 +169,17 @@ class CatalogView(ListAPIView):
             if sort_type == 'dec':
                 sort = '-'+sort
             queryset = queryset.order_by(sort)
+        print(queryset)
         return queryset
+
+
+class CategoryCatalogView(CatalogView):
+    def get(self, request, category, *args, **kwargs):
+        print('!!!!', category)
+
+
+class ProductView(APIView):
+    def get(self, request: Request, product_id) -> Response:
+        product = Product.objects.get(pk=product_id)
+        serializer = FullProductSerializer(product)
+        return Response(serializer.data)
