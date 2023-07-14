@@ -209,3 +209,50 @@ class FullProductSerializer(serializers.ModelSerializer):
         return obj.review_set.all().aggregate(Avg("rate"))
 
 
+class CartSerializer(ProductSerializer):
+    count = serializers.SerializerMethodField(method_name='get_count')
+    images = serializers.SerializerMethodField(method_name='get_images')
+    tags = serializers.SerializerMethodField(method_name='get_tags')
+    reviews = serializers.SerializerMethodField(method_name='get_reviews')
+    rating = serializers.SerializerMethodField(method_name='get_rating')
+
+    class Meta:
+        model = Product
+        fields = ['id',
+                  'category',
+                  'price',
+                  'count',
+                  'date',
+                  'title',
+                  'description',
+                  'freeDelivery',
+                  'images',
+                  'tags',
+                  'reviews',
+                  'rating']
+
+    def get_count(self, obj):
+        data = self.context
+        for i in data:
+            count = i['count']
+            if next(iter(i.values())) == obj.id:
+                return count
+
+    def get_images(self, obj):
+        images = obj.image_set.all()
+        result = []
+        for image in images:
+            result.append({'src': image.image.url,
+                           'alt': image.alt})
+        return result
+
+    def get_tags(self, obj):
+        item = obj.tags.all()
+        serializer = TagsSerializer(item, many=True)
+        return serializer.data
+
+    def get_reviews(self, obj):
+        return obj.review_set.all().count()
+
+    def get_rating(self, obj):
+        return obj.review_set.all().aggregate(Avg("rate"))

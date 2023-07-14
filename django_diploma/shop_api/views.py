@@ -1,5 +1,6 @@
 import datetime
 import io
+import json
 
 import django.utils.timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
@@ -11,10 +12,12 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
+
 from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review
 from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer, CartSerializer
+from django.conf import settings
 
 
 class SignIn(APIView):
@@ -201,3 +204,56 @@ class ReviewAddView(APIView):
             )
         review.save()
         return Response(serializer.data, status=200)
+
+
+class BasketAPIView(ListAPIView):
+    serializer_class = CartSerializer
+
+    def data(self):
+        queryset = self.get_queryset()
+        serializer = CartSerializer(queryset, context=self.request.session.get('cart'), many=True)
+        return serializer.data
+
+    def get_queryset(self):
+        if 'cart' in self.request.session:
+            products = self.request.session['cart']
+            ids = list()
+            print(products)
+            for i in products:
+                ids.append(i['id'])
+            data = Product.objects.filter(id__in=ids)
+        else:
+            data = ''
+        return data
+
+    def delete(self, request):
+        data = json.loads(request.body)
+        product_id = data['id']
+        count = int(data['count'])
+        for index, value in enumerate(request.session['cart']):
+            if next(iter(value.values())) == product_id:
+                request.session['cart'][index]['count'] -= count
+                if request.session['cart'][index]['count'] == 0:
+                    request.session['cart'].remove(request.session['cart'][index])
+                request.session.save()
+                return Response(self.data())
+        return Response(status=500)
+
+    def get(self, request):
+        return Response(self.data())
+
+    def post(self, request):
+        product_id = request.data['id']
+        count = int(request.data['count'])
+        if 'cart' in request.session:
+            for index, value in enumerate(request.session['cart']):
+                if next(iter(value.values())) == product_id:
+                    request.session['cart'][index]['count'] += count
+                    request.session.save()
+                    return Response(self.data())
+            request.session['cart'].append({'id': product_id, 'count': count})
+            request.session.save()
+            return Response(self.data())
+        request.session['cart'] = [{'id': product_id, 'count': count}]
+        request.session.save()
+        return Response(self.data())
