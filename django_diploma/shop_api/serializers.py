@@ -2,7 +2,7 @@ from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 
-from .models import Avatar, Profile, Category, Tag, Product, Review, Specification
+from .models import Avatar, Profile, Category, Tag, Product, Review, Specification, Order, OrderProducts
 
 
 class AuthSerializer(serializers.Serializer):
@@ -233,6 +233,7 @@ class CartSerializer(ProductSerializer):
 
     def get_count(self, obj):
         data = self.context
+        print(data)
         for i in data:
             count = i['count']
             if next(iter(i.values())) == obj.id:
@@ -256,3 +257,46 @@ class CartSerializer(ProductSerializer):
 
     def get_rating(self, obj):
         return obj.review_set.all().aggregate(Avg("rate"))
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    products = serializers.SerializerMethodField(method_name='get_products')
+#    totalCost = serializers.SerializerMethodField(method_name='get_totalCost')
+
+    class Meta:
+        model = Order
+        fields = ['id',
+                  'createdAt',
+                  'fullName',
+                  'email',
+                  'phone',
+                  'deliveryType',
+                  'paymentType',
+                  'totalCost',
+                  'status',
+                  'city',
+                  'address',
+                  'products']
+
+    def get_products(self, obj):
+        order_products = obj.orderproducts_set.all().values('product_id', 'count')
+        print(order_products)
+        products_ids = obj.orderproducts_set.all().values('product')
+        products = Product.objects.filter(id__in=products_ids)
+        serializer = CartSerializer(products, context=order_products, many=True)
+#        serializer = ProductSerializer(products, many=True)
+        print('!!!\n!!!\n!!!', serializer.data)
+        return serializer.data
+
+    def save(self, instance, validated_data):
+        instance.fullName = validated_data.get('fullName', instance.fullName)
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.deliveryType = validated_data.get('deliveryType', instance.deliveryType)
+        instance.paymentType = validated_data.get('paymentType', instance.paymentType)
+        instance.totalCost = validated_data.get('totalCost', instance.totalCost)
+        instance.status = 'confirmed'
+        instance.city = validated_data.get('city', instance.city)
+        instance.address = validated_data.get('address', instance.address)
+        instance.save()
+        return instance

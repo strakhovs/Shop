@@ -105,3 +105,23 @@ class Avatar(models.Model):
     avatar = models.ImageField(null=True, upload_to=profile_avatar_directory_path, verbose_name='avatar')
     src = models.CharField(max_length=100)
     alt = models.CharField(max_length=200)
+
+
+class Order(models.Model):
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    fullName = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=10)
+    deliveryType = models.CharField(max_length=50)
+    paymentType = models.CharField(max_length=50)
+    totalCost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    status = models.CharField(max_length=50)
+    city = models.CharField(max_length=100)
+    address = models.CharField(max_length=200)
+
+
+class OrderProducts(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    count = models.IntegerField()
