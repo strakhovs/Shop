@@ -4,7 +4,7 @@ from django.urls import path
 
 from .views import SignIn, SignUp, ProfileView, AvatarUpdateView, PasswordUpdateView, CategoriesView, TagsView, \
     LimitedProductsView, PopularProductsView, BannersView, CatalogView, CategoryCatalogView, ProductView, ReviewAddView, \
-    BasketAPIView, OrderAPIView, OrderDetailsView
+    BasketAPIView, OrderAPIView, OrderDetailsView, PaymentView
 
 app_name = "shop_api"
 
@@ -27,4 +27,5 @@ urlpatterns = [
     path('basket/', BasketAPIView.as_view()),
     path('orders/', OrderAPIView.as_view()),
     path('order/<int:order_id>/', OrderDetailsView.as_view()),
+    path('payment/<int:order_id>/', PaymentView.as_view()),
 ]

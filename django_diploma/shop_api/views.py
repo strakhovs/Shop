@@ -124,12 +124,16 @@ class CategoriesView(ListAPIView):
 class TagsView(APIView):
     def get(self, request: Request) -> Response:
         category = request.query_params.get('category')
-        if category == 'NaN':
-            return Response([])
-        item = Tag.objects.get(id=category)
-        serializer = TagsSerializer(item)
+        if category:
+
+            item = Tag.objects.get(id=category)
+            serializer = TagsSerializer(item)
         # data = JSONRenderer().render(serializer.data)
-        return Response([serializer.data])
+            return Response([serializer.data])
+        else:
+            items = Tag.objects.all()
+            serializer = TagsSerializer(items, many=True)
+            return Response(serializer.data)
 
 
 class LimitedProductsView(ListAPIView):
@@ -283,7 +287,11 @@ class OrderAPIView(ListAPIView):
         data = request.data
         for item in data:
             print(item.get('id'), item.get('count'))
-        order = Order(user=request.user)
+        if request.user.is_authenticated:
+            user = request.user
+        else:
+            user = None
+        order = Order(user=user)
         order.save()
         for item in data:
             product = OrderProducts(order=order,
@@ -319,3 +327,20 @@ class OrderDetailsView(APIView):
         request.session['cart'] = []
         request.session.save()
         return Response(status=200)
+
+
+class PaymentView(APIView):
+    def post(self, request, order_id):
+        success = False
+        print(request.data)
+        card_number = request.data.get('number')
+        year = request.data.get('year')
+        month = request.data.get('month')
+        code = request.data.get('code')
+        if card_number.isdigit() and len(card_number) == 16 and not card_number.endswith('0'):
+            order = Order.objects.get(id=order_id)
+            order.status = 'paid'
+            order.save()
+            return Response(status=200)
+        else:
+            return Response(status=418)
