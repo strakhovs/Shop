@@ -13,10 +13,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
 
-from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review
+from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review, Order, OrderProducts
 from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer, CartSerializer
+    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer, \
+    CartSerializer, OrderSerializer
 from django.conf import settings
 
 
@@ -266,3 +267,55 @@ class BasketAPIView(ListAPIView):
         request.session['cart'] = [{'id': product_id, 'count': count}]
         request.session.save()
         return Response(self.data())
+
+
+class OrderAPIView(ListAPIView):
+    serializer_class = OrderSerializer
+    paginator = None
+
+    def get_queryset(self):
+        queryset = Order.objects.filter(user=self.request.user)
+        serializer = OrderSerializer(queryset, many=True)
+        print('\n\n', serializer.data)
+        return queryset
+
+    def post(self, request):
+        data = request.data
+        for item in data:
+            print(item.get('id'), item.get('count'))
+        order = Order(user=request.user)
+        order.save()
+        for item in data:
+            product = OrderProducts(order=order,
+                                    product=Product.objects.get(id=item.get('id')),
+                                    count=item.get('count'))
+            product.save()
+        return Response({'orderId': order.pk})
+
+
+class OrderDetailsView(APIView):
+    def data(self):
+        queryset = self.get_queryset()
+        serializer = CartSerializer(queryset, context=self.request.session.get('cart'), many=True)
+        return serializer.data
+
+    def get(self, request, order_id):
+        print('order id - ', order_id)
+        data = Order.objects.get(id=order_id)
+        print('order - ', data)
+        serializer = OrderSerializer(data)
+        # serializer.is_valid()
+        print('\n', serializer)
+        result = JSONRenderer().render(serializer.data)
+        print(result)
+        return Response(serializer.data)
+
+    def post(self, request, order_id):
+        instance = Order.objects.get(id=order_id)
+        serializer = OrderSerializer(instance=instance, data=request.data)
+        serializer.is_valid()
+        print(serializer.data)
+        serializer.save(instance=instance, validated_data=serializer.data)
+        request.session['cart'] = []
+        request.session.save()
+        return Response(status=200)
