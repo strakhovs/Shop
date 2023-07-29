@@ -17,7 +17,7 @@ from .models import Profile, Avatar, profile_avatar_directory_path, Category, Ta
 from .paginators import CustomPaginator
 from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
     TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer, \
-    CartSerializer, OrderSerializer
+    CartSerializer, OrderSerializer, SalesSerializer
 from django.conf import settings
 
 
@@ -344,3 +344,9 @@ class PaymentView(APIView):
             return Response(status=200)
         else:
             return Response(status=418)
+
+
+class SalesView(ListAPIView):
+    serializer_class = SalesSerializer
+    pagination_class = CustomPaginator
+    queryset = Product.objects.exclude(salePrice=None)

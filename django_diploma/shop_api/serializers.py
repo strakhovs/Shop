@@ -300,3 +300,25 @@ class OrderSerializer(serializers.ModelSerializer):
         instance.address = validated_data.get('address', instance.address)
         instance.save()
         return instance
+
+
+class SalesSerializer(serializers.ModelSerializer):
+    images = serializers.SerializerMethodField(method_name='get_images')
+
+    class Meta:
+        model = Product
+        fields = ['id',
+                  'price',
+                  'salePrice',
+                  'dateFrom',
+                  'dateTo',
+                  'title',
+                  'images']
+
+    def get_images(self, obj):
+        images = obj.image_set.all()
+        result = []
+        for image in images:
+            result.append({'src': image.image.url,
+                           'alt': image.alt})
+        return result
