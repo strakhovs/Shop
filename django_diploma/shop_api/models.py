@@ -53,6 +53,9 @@ class Product(models.Model):
     is_limited = models.BooleanField(verbose_name='is limited', default=False)
     number_of_purchases = models.IntegerField(verbose_name='number of purchases', default=0)
     on_banner = models.BooleanField(verbose_name='on banner', default=False)
+    salePrice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dateFrom = models.DateField(null=True)
+    dateTo = models.DateField(null=True)
 
     def __str__(self):
         return self.title
