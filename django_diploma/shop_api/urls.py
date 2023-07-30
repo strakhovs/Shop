@@ -1,3 +1,4 @@
+from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
 
 from django.urls import path
@@ -5,6 +6,7 @@ from django.urls import path
 from .views import SignIn, SignUp, ProfileView, AvatarUpdateView, PasswordUpdateView, CategoriesView, TagsView, \
     LimitedProductsView, PopularProductsView, BannersView, CatalogView, CategoryCatalogView, ProductView, ReviewAddView, \
     BasketAPIView, OrderAPIView, OrderDetailsView, PaymentView, SalesView
+from ..django_diploma import settings
 
 app_name = "shop_api"
 
@@ -29,4 +31,4 @@ urlpatterns = [
     path('order/<int:order_id>/', OrderDetailsView.as_view()),
     path('payment/<int:order_id>/', PaymentView.as_view()),
     path('sales/', SalesView.as_view()),
-]
+] + static(settings.STATIC_URL)

@@ -1,5 +1,8 @@
+from django.conf.urls.static import static
 from django.urls import path
 from django.views.generic import TemplateView
+
+from django_diploma.django_diploma import settings
 
 urlpatterns = [
     path('', TemplateView.as_view(template_name="frontend/index.html")),
@@ -19,4 +22,4 @@ urlpatterns = [
     path('sale/', TemplateView.as_view(template_name="frontend/sale.html")),
     path('sign-in/', TemplateView.as_view(template_name="frontend/signIn.html")),
     path('sign-up/', TemplateView.as_view(template_name="frontend/signUp.html")),
-]
+] + static(settings.STATIC_URL)
