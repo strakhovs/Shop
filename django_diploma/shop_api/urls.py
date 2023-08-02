@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
 
 from django.urls import path
@@ -29,4 +31,4 @@ urlpatterns = [
     path('order/<int:order_id>/', OrderDetailsView.as_view()),
     path('payment/<int:order_id>/', PaymentView.as_view()),
     path('sales/', SalesView.as_view()),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
