@@ -23,13 +23,5 @@ services:
       - ./django_diploma/database:/app/database
       - static_volume:/app/static/
 
-  nginx:
-    build: ./nginx
-    volumes:
-      - static_volume:/app/static
-    ports:
-      - "1337:80"
-    depends_on:
-      - app
 volumes:
   static_volume:
