@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import django.utils.timezone
 from django.contrib.auth.models import User
 from django.db import models
@@ -96,9 +94,6 @@ class Profile(models.Model):
     fullName = models.CharField(max_length=100, null=False, blank=True)
     email = models.EmailField(null=False, blank=True)
     phone = models.CharField(max_length=15, blank=True, verbose_name='phone')
-    # avatar = models.OneToOneField(Avatar, models.CASCADE, null=True, blank=True)
-    #  avatar = models.ImageField(null=True, blank=True, upload_to=profile_avatar_directory_path,
-    #                          verbose_name='avatar')
 
 
 class Avatar(models.Model):

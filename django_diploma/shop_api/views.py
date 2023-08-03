@@ -1,9 +1,8 @@
-import datetime
 import io
 import json
 
 import django.utils.timezone
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -15,10 +14,9 @@ from django.contrib.auth.hashers import make_password
 
 from .models import Profile, Avatar, profile_avatar_directory_path, Category, Tag, Product, Review, Order, OrderProducts
 from .paginators import CustomPaginator
-from .serializers import AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer, \
-    TagsSerializer, ProductSerializer, CatalogRequestSerializer, FullProductSerializer, ReviewSerializer, \
-    CartSerializer, OrderSerializer, SalesSerializer
-from django.conf import settings
+from .serializers import (AuthSerializer, RegisterSerializer, ProfileSerializer, AvatarSerializer, CategoriesSerializer,
+                          TagsSerializer, ProductSerializer, FullProductSerializer, ReviewSerializer, CartSerializer,
+                          OrderSerializer, SalesSerializer)
 
 
 class SignIn(APIView):
@@ -67,16 +65,10 @@ class SignUp(APIView):
 class ProfileView(APIView):
     def get(self, request: Request) -> Response:
         profile = Profile.objects.get(user_id=request.user)
-        print(profile)
         serializer = ProfileSerializer(profile)
-
-        data = JSONRenderer().render(serializer.data)
-        print(serializer.data)
-        print(data)
         return Response(serializer.data)
 
     def post(self, request: Request) -> Response:
-        print(request.data)
         profile = Profile.objects.get(user_id=request.user)
         data = request.data
         serializer = ProfileSerializer(data=data)
@@ -92,26 +84,21 @@ class ProfileView(APIView):
 
 class AvatarUpdateView(APIView):
     def post(self, request: Request) -> Response:
-        print(request.FILES)
         profile = Profile.objects.get(user=request.user)
         avatar = Avatar.objects.get(profile_id=profile.pk)
         avatar.avatar = request.FILES["avatar"]
         filename = request.FILES["avatar"].name
         avatar.src = '/media/' + profile_avatar_directory_path(profile, filename)
-        print(avatar.src, '!!!!!!!!!!!!!!!!!!!!!!')
         avatar.alt = 'avatar'
         avatar.save()
         serializer = AvatarSerializer(avatar)
-        print(serializer.data)
         data = JSONRenderer().render(serializer.data)
-        print(data)
         return Response(data)
 
 
 class PasswordUpdateView(APIView):
     def post(self, request: Request) -> Response:
         user = request.user
-        print(request.data)
         return Response(status=200)
 
 
@@ -125,10 +112,8 @@ class TagsView(APIView):
     def get(self, request: Request) -> Response:
         category = request.query_params.get('category')
         if category:
-
             item = Tag.objects.get(id=category)
             serializer = TagsSerializer(item)
-        # data = JSONRenderer().render(serializer.data)
             return Response([serializer.data])
         else:
             items = Tag.objects.all()
@@ -166,7 +151,6 @@ def get_categories(category):
 
 
 class CatalogView(ListAPIView):
-
     serializer_class = ProductSerializer
     pagination_class = CustomPaginator
 
@@ -181,10 +165,8 @@ class CatalogView(ListAPIView):
         sort = self.request.GET.get('sort')
         sort_type = self.request.GET.get('sortType')
         limit = self.request.GET.get('limit')
-        print(name, min_price, max_price, free_delivery, available, current_page, sort, sort_type, limit)
         if category:
             categories = get_categories(category)
-            print('!!!!@@@@', categories)
             queryset = Product.objects.filter(title__icontains=name,
                                               category__in=categories,
                                               price__range=(min_price, max_price),
@@ -205,16 +187,7 @@ class CatalogView(ListAPIView):
             if sort_type == 'dec':
                 sort = '-'+sort
             queryset = queryset.order_by(sort)
-        print(queryset)
         return queryset
-
-
-###
-# Not used!
-class CategoryCatalogView(CatalogView):
-    def get(self, request, category, *args, **kwargs):
-        print('!!!!', category)
-
 
 
 class ProductView(APIView):
@@ -252,7 +225,6 @@ class BasketAPIView(ListAPIView):
         if 'cart' in self.request.session:
             products = self.request.session['cart']
             ids = list()
-            print(products)
             for i in products:
                 ids.append(i['id'])
             data = Product.objects.filter(id__in=ids)
@@ -300,13 +272,10 @@ class OrderAPIView(ListAPIView):
     def get_queryset(self):
         queryset = Order.objects.filter(user=self.request.user)
         serializer = OrderSerializer(queryset, many=True)
-        print('\n\n', serializer.data)
         return queryset
 
     def post(self, request):
         data = request.data
-        for item in data:
-            print(item.get('id'), item.get('count'))
         if request.user.is_authenticated:
             user = request.user
         else:
@@ -336,25 +305,17 @@ class OrderDetailsView(APIView):
         return serializer.data
 
     def get(self, request, order_id):
-        print('order id - ', order_id)
         data = Order.objects.get(id=order_id)
-        print('order - ', data)
         serializer = OrderSerializer(data)
-        # serializer.is_valid()
-        print('\n', serializer)
-        result = JSONRenderer().render(serializer.data)
-        print(result)
         return Response(serializer.data)
 
     def post(self, request, order_id):
         instance = Order.objects.get(id=order_id)
         serializer = OrderSerializer(instance=instance, data=request.data)
         serializer.is_valid()
-        print(serializer.data)
         serializer.save(instance=instance, validated_data=serializer.data)
         request.session['cart'] = []
         request.session.save()
-        products = Product.objects.filter()
         return Response(status=200)
 
 
