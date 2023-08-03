@@ -198,6 +198,10 @@ class CatalogView(ListAPIView):
                                               count__gte=available
                                               )
         if sort:
+            if sort == 'reviews':
+                sort = 'review'
+            elif sort == 'rating':
+                sort = 'number_of_purchases'
             if sort_type == 'dec':
                 sort = '-'+sort
             queryset = queryset.order_by(sort)
