@@ -233,7 +233,7 @@ class CartSerializer(ProductSerializer):
 
     def get_count(self, obj):
         data = self.context
-        print(data)
+        print('!!!getcount!!!', data)
         for i in data:
             count = i['count']
             if next(iter(i.values())) == obj.id:
@@ -261,7 +261,7 @@ class CartSerializer(ProductSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     products = serializers.SerializerMethodField(method_name='get_products')
-#    totalCost = serializers.SerializerMethodField(method_name='get_totalCost')
+    #totalCost = serializers.SerializerMethodField(method_name='get_totalCost')
 
     class Meta:
         model = Order
@@ -280,13 +280,17 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_products(self, obj):
         order_products = obj.orderproducts_set.all().values('product_id', 'count')
-        print(order_products)
+        print('!!!getProducts!!!', order_products)
         products_ids = obj.orderproducts_set.all().values('product')
         products = Product.objects.filter(id__in=products_ids)
         serializer = CartSerializer(products, context=order_products, many=True)
 #        serializer = ProductSerializer(products, many=True)
         print('!!!\n!!!\n!!!', serializer.data)
         return serializer.data
+
+   # def get_totalCost(self, obj):
+   #    ...
+
 
     def save(self, instance, validated_data):
         instance.fullName = validated_data.get('fullName', instance.fullName)
@@ -295,6 +299,7 @@ class OrderSerializer(serializers.ModelSerializer):
         instance.deliveryType = validated_data.get('deliveryType', instance.deliveryType)
         instance.paymentType = validated_data.get('paymentType', instance.paymentType)
         instance.totalCost = validated_data.get('totalCost', instance.totalCost)
+        print('\n\n\n', validated_data.get('totalCost'))
         instance.status = 'confirmed'
         instance.city = validated_data.get('city', instance.city)
         instance.address = validated_data.get('address', instance.address)

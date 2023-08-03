@@ -311,13 +311,21 @@ class OrderAPIView(ListAPIView):
             user = request.user
         else:
             user = None
-        order = Order(user=user)
+        order = Order(user=user, totalCost=0)
         order.save()
         for item in data:
-            product = OrderProducts(order=order,
-                                    product=Product.objects.get(id=item.get('id')),
-                                    count=item.get('count'))
-            product.save()
+            product = Product.objects.get(id=item.get('id'))
+            count = item.get('count')
+            if product.count >= count:
+                order_product = OrderProducts(order=order,
+                                              product=product,
+                                              count=count)
+                order.totalCost += product.price * count
+                order_product.save()
+                product.count -= count
+                product.number_of_purchases += count
+                product.save()
+        order.save()
         return Response({'orderId': order.pk})
 
 
@@ -346,6 +354,7 @@ class OrderDetailsView(APIView):
         serializer.save(instance=instance, validated_data=serializer.data)
         request.session['cart'] = []
         request.session.save()
+        products = Product.objects.filter()
         return Response(status=200)
 
 
