@@ -154,6 +154,17 @@ class BannersView(ListAPIView):
     paginator = None
 
 
+def get_categories(category):
+    categories_list = Category.objects.all()
+    result = []
+    for i in categories_list:
+        if i.id == int(category):
+            result.append(i.id)
+        if i.parent_id == int(category):
+            result += get_categories(i.id)
+    return result
+
+
 class CatalogView(ListAPIView):
 
     serializer_class = ProductSerializer
@@ -172,8 +183,10 @@ class CatalogView(ListAPIView):
         limit = self.request.GET.get('limit')
         print(name, min_price, max_price, free_delivery, available, current_page, sort, sort_type, limit)
         if category:
+            categories = get_categories(category)
+            print('!!!!@@@@', categories)
             queryset = Product.objects.filter(title__icontains=name,
-                                              category=category,
+                                              category__in=categories,
                                               price__range=(min_price, max_price),
                                               freeDelivery=free_delivery,
                                               count__gte=available
@@ -192,9 +205,12 @@ class CatalogView(ListAPIView):
         return queryset
 
 
+###
+# Not used!
 class CategoryCatalogView(CatalogView):
     def get(self, request, category, *args, **kwargs):
         print('!!!!', category)
+
 
 
 class ProductView(APIView):
