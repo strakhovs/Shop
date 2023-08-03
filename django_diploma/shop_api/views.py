@@ -155,6 +155,7 @@ class CatalogView(ListAPIView):
     pagination_class = CustomPaginator
 
     def get_queryset(self):
+        print(self.request)
         category = self.request.GET.get('category')
         name = self.request.GET.get('filter[name]')
         min_price = self.request.GET.get('filter[minPrice]')
@@ -165,20 +166,18 @@ class CatalogView(ListAPIView):
         sort = self.request.GET.get('sort')
         sort_type = self.request.GET.get('sortType')
         limit = self.request.GET.get('limit')
+        tags = self.request.query_params.getlist('tags[]')
+        print(tags)
+        queryset = Product.objects.filter(title__icontains=name,
+                                          price__range=(min_price, max_price),
+                                          freeDelivery=free_delivery,
+                                          count__gte=available
+                                          )
         if category:
             categories = get_categories(category)
-            queryset = Product.objects.filter(title__icontains=name,
-                                              category__in=categories,
-                                              price__range=(min_price, max_price),
-                                              freeDelivery=free_delivery,
-                                              count__gte=available
-                                              )
-        else:
-            queryset = Product.objects.filter(title__icontains=name,
-                                              price__range=(min_price, max_price),
-                                              freeDelivery=free_delivery,
-                                              count__gte=available
-                                              )
+            queryset = queryset.filter(category__in=categories)
+        if tags:
+            queryset = queryset.filter(tags__in=tags).distinct()
         if sort:
             if sort == 'reviews':
                 sort = 'review'
