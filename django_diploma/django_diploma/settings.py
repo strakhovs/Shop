@@ -35,6 +35,7 @@ DEBUG = getenv("DJANGO_DEBUG", "0") == "1"
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "0.0.0.0",
+    "92.63.179.54",
 ] + getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
 
 
