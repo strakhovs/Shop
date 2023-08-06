@@ -1,8 +1,6 @@
 from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.renderers import JSONRenderer
-
-from .models import Avatar, Profile, Category, Tag, Product, Review, Specification, Order, OrderProducts
+from .models import Avatar, Profile, Category, Tag, Product, Review, Specification, Order
 
 
 class AuthSerializer(serializers.Serializer):
@@ -39,17 +37,16 @@ class CategoryImageSerializer(serializers.ModelSerializer):
         fields = ['src', 'alt']
 
     def get_src(self, model):
-        print(model.name)
         return model.name
 
     def get_alt(self, model):
-        print('model - ', model)
         return model.name
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField(method_name='get_subcategories')
     image = serializers.SerializerMethodField(method_name='get_image')
+
     class Meta:
         model = Category
         fields = ('id', 'title', 'image', 'subcategories')
@@ -69,7 +66,6 @@ class CategoriesSerializer(serializers.ModelSerializer):
         return subcategories
 
     def get_image(self, obj):
-        print(obj.image.url)
         return {'src': obj.image.url,
                 'alt': 'Category image'}
 
@@ -178,21 +174,10 @@ class FullProductSerializer(serializers.ModelSerializer):
                            'alt': image.alt})
         return result
 
-        #images = obj.image_set.all()
-        #result = []
-        #for image in images:
-        #    result.append(image.image.url)
-        #return result
-
     def get_tags(self, obj):
         item = obj.tags.all()
         serializer = TagsSerializer(item, many=True)
         return serializer.data
-        #tags = obj.tags.all()
-        #result = []
-        #for tag in tags:
-        #    result.append(tag.name)
-        #return result
 
     def get_reviews(self, obj):
         reviews = obj.review_set.all()
@@ -201,7 +186,6 @@ class FullProductSerializer(serializers.ModelSerializer):
 
     def get_specs(self, obj):
         specs = obj.specifications.all()
-        print(specs)
         serializer = SpecsSerializer(specs, many=True)
         return serializer.data
 
@@ -233,7 +217,6 @@ class CartSerializer(ProductSerializer):
 
     def get_count(self, obj):
         data = self.context
-        print(data)
         for i in data:
             count = i['count']
             if next(iter(i.values())) == obj.id:
@@ -261,7 +244,6 @@ class CartSerializer(ProductSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     products = serializers.SerializerMethodField(method_name='get_products')
-#    totalCost = serializers.SerializerMethodField(method_name='get_totalCost')
 
     class Meta:
         model = Order
@@ -280,12 +262,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_products(self, obj):
         order_products = obj.orderproducts_set.all().values('product_id', 'count')
-        print(order_products)
         products_ids = obj.orderproducts_set.all().values('product')
         products = Product.objects.filter(id__in=products_ids)
         serializer = CartSerializer(products, context=order_products, many=True)
-#        serializer = ProductSerializer(products, many=True)
-        print('!!!\n!!!\n!!!', serializer.data)
         return serializer.data
 
     def save(self, instance, validated_data):
